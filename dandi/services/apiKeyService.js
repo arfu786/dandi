@@ -82,5 +82,26 @@ export const apiKeyService = {
       console.error('Error deleting API key:', error)
       return { error }
     }
+  },
+
+  validateApiKey: async (apiKey) => {
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('*')
+      .eq('key', apiKey)
+      .eq('status', 'active')
+      .single()
+
+    if (error || !data) {
+      return { error: error || new Error('Invalid API key') }
+    }
+
+    // Update usage count
+    await supabase
+      .from('api_keys')
+      .update({ usage: data.usage + 1 })
+      .eq('id', data.id)
+
+    return { data }
   }
 } 
